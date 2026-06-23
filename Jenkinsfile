@@ -31,7 +31,7 @@ pipeline {
       echo 'Pipeline 성공적으로 완료!'
     }
     failure {
-      echo 'Pipeline 실패!'
+      echo 'Pipeline 실패'
     }
   }
 }

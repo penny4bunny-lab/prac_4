@@ -1,37 +1,31 @@
-pipeline {
-  agent any
-  stages {
+node {
     stage('Checkout') {
-      steps {
-        checkout scm
-      }
+        // 본인의 GitHub 레포지토리 주소로 변경 필요
+        git url: 'https://github.com/penny4bunny-lab/prac_4.git', branch: 'main', credentialsId: 'github-checkout-token'
     }
-    stage('Install') {
-      steps {
-        bat 'npm install'
-      }
+
+    stage('Build') {
+        try {
+            bat 'npm install' // 빌드 전 패키지 설치 보완
+            bat 'npm run build' // React 기본 빌드 명령어로 보완
+        } catch (e) {
+            error '빌드 실패: ${e}'
+        }
     }
+
     stage('Test') {
-      steps {
-        //bat 'npm test'
-        bat 'set CI=true && npm test -- --passWithNoTests'
-      }
+        // 지난 실습에서 확인한 Windows 환경 및 테스트 코드 없음 예외 처리 적용
+        def testsPassed = bat(script: 'set CI=true && npm test -- --passWithNoTests', returnStatus: true)
+        if (testsPassed != 0) {
+            error '테스트 실패!'
+        }
     }
-    stage('Start') {
-      when {
-        branch 'main'
-      }
-      steps{
-        bat 'npm start'
-      }
+
+    stage('Deploy') {
+        if (env.BRANCH_NAME == 'main') {
+            bat 'npm start'
+        } else {
+            echo 'Main 브랜치가 아니어서 실행 생략'
+        }
     }
-  }
-  post{
-    success {
-      echo 'Pipeline 성공적으로 완료!'
-    }
-    failure {
-      echo 'Pipeline 실패!'
-    }
-  }
 }
